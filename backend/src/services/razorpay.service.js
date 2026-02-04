@@ -8,6 +8,14 @@ import logger from '../utils/logger.js';
  */
 class RazorpayService {
   constructor() {
+    this.initialized = false;
+    this.client = null;
+  }
+
+  // Lazy initialization - only run when first method is called
+  _ensureInitialized() {
+    if (this.initialized) return;
+    
     this.keyId = process.env.RAZORPAY_KEY_ID;
     this.keySecret = process.env.RAZORPAY_KEY_SECRET;
     this.webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
@@ -22,12 +30,16 @@ class RazorpayService {
       });
       logger.info('✅ Razorpay service initialized');
     }
+    
+    this.initialized = true;
   }
 
   /**
    * Create Razorpay order
    */
   async createOrder(orderData) {
+    this._ensureInitialized();
+    
     try {
       if (!this.client) {
         throw new Error('Razorpay not configured');
@@ -66,6 +78,8 @@ class RazorpayService {
    * Verify payment signature
    */
   verifyPaymentSignature(paymentData) {
+    this._ensureInitialized();
+    
     try {
       const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = paymentData;
 
@@ -93,6 +107,8 @@ class RazorpayService {
    * Verify webhook signature
    */
   verifyWebhookSignature(body, signature) {
+    this._ensureInitialized();
+    
     try {
       if (!this.webhookSecret) {
         logger.warn('Webhook secret not configured, skipping verification');
@@ -115,6 +131,8 @@ class RazorpayService {
    * Get payment details
    */
   async getPayment(paymentId) {
+    this._ensureInitialized();
+    
     try {
       if (!this.client) {
         throw new Error('Razorpay not configured');
@@ -152,6 +170,8 @@ class RazorpayService {
    * Capture payment (for manual capture)
    */
   async capturePayment(paymentId, amount) {
+    this._ensureInitialized();
+    
     try {
       if (!this.client) {
         throw new Error('Razorpay not configured');
@@ -178,6 +198,8 @@ class RazorpayService {
    * Refund payment
    */
   async refundPayment(paymentId, amount, notes = {}) {
+    this._ensureInitialized();
+    
     try {
       if (!this.client) {
         throw new Error('Razorpay not configured');
@@ -213,8 +235,8 @@ class RazorpayService {
   /**
    * Get refund status
    */
-  async getRefund(refundId) {
-    try {
+  async getRefund(refundId) {    this._ensureInitialized();
+        try {
       if (!this.client) {
         throw new Error('Razorpay not configured');
       }
@@ -239,6 +261,8 @@ class RazorpayService {
    * Create customer
    */
   async createCustomer(customerData) {
+    this._ensureInitialized();
+    
     try {
       if (!this.client) {
         throw new Error('Razorpay not configured');

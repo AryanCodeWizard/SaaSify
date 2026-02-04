@@ -7,6 +7,14 @@ import logger from '../utils/logger.js';
  */
 class GoDaddyService {
   constructor() {
+    this.initialized = false;
+    this.client = null;
+  }
+
+  // Lazy initialization - only run when first method is called
+  _ensureInitialized() {
+    if (this.initialized) return;
+    
     this.apiKey = process.env.GODADDY_API_KEY;
     this.apiSecret = process.env.GODADDY_API_SECRET;
     this.baseURL = process.env.GODADDY_API_URL || 'https://api.godaddy.com';
@@ -14,6 +22,8 @@ class GoDaddyService {
 
     if (!this.apiKey || !this.apiSecret) {
       logger.warn('GoDaddy API credentials not configured. Domain features will be limited.');
+      this.initialized = true;
+      return;
     }
 
     // Create axios instance with default config
@@ -46,6 +56,8 @@ class GoDaddyService {
         throw error;
       }
     );
+
+    this.initialized = true;
   }
 
   /**
@@ -53,6 +65,11 @@ class GoDaddyService {
    * @param {Object} transferData - Transfer data including domain and authCode
    */
   async initiateTransfer(transferData) {
+    this._ensureInitialized();
+    if (!this.client) {
+      throw new Error('GoDaddy API not configured');
+    }
+    
     try {
       const response = await this.client.post('/v1/domains/transfers', transferData);
 
@@ -73,6 +90,11 @@ class GoDaddyService {
    * @param {string} domain
    */
   async getTransferStatus(domain) {
+    this._ensureInitialized();
+    if (!this.client) {
+      throw new Error('GoDaddy API not configured');
+    }
+    
     try {
       const response = await this.client.get(`/v1/domains/${domain}/transfer`);
 
@@ -94,6 +116,9 @@ class GoDaddyService {
    * @param {string} domain
    */
   async listDNSRecords(domain) {
+    this._ensureInitialized();
+    if (!this.client) throw new Error('GoDaddy API not configured');
+    
     try {
       const response = await this.client.get(`/v1/domains/${domain}/records`);
       return response.data;
@@ -109,6 +134,9 @@ class GoDaddyService {
    * @param {Object} record - { type, name, data, ttl, priority }
    */
   async upsertDNSRecord(domain, record) {
+    this._ensureInitialized();
+    if (!this.client) throw new Error('GoDaddy API not configured');
+    
     try {
       // GoDaddy uses PUT to /records/{type}/{name} with an array of records
       const { type, name } = record;
@@ -127,6 +155,9 @@ class GoDaddyService {
    * @param {string} name
    */
   async deleteDNSRecord(domain, type, name) {
+    this._ensureInitialized();
+    if (!this.client) throw new Error('GoDaddy API not configured');
+    
     try {
       // Delete by setting empty array for that type/name
       await this.client.put(`/v1/domains/${domain}/records/${type}/${name}`, []);
@@ -188,6 +219,11 @@ class GoDaddyService {
    * @returns {Promise<Object>} - Availability status
    */
   async checkAvailability(domain) {
+    this._ensureInitialized();
+    if (!this.client) {
+      throw new Error('GoDaddy API not configured');
+    }
+    
     try {
       const response = await this.client.get(`/v1/domains/available`, {
         params: {
@@ -217,6 +253,9 @@ class GoDaddyService {
    * @returns {Promise<Array<Object>>} - Array of availability results
    */
   async checkBulkAvailability(domains) {
+    this._ensureInitialized();
+    if (!this.client) throw new Error('GoDaddy API not configured');
+    
     try {
       const response = await this.client.post('/v1/domains/available', domains);
 
@@ -241,6 +280,9 @@ class GoDaddyService {
    * @returns {Promise<Array<Object>>} - Array of domain suggestions
    */
   async getDomainSuggestions(query, options = {}) {
+    this._ensureInitialized();
+    if (!this.client) throw new Error('GoDaddy API not configured');
+    
     try {
       const {
         maxResults = 20,
@@ -248,19 +290,24 @@ class GoDaddyService {
         waitMs = 1000,
       } = options;
 
+      const requestParams = {
+        query,
+        country: 'US',
+        city: options.city || 'New York',
+        tlds: tlds.map(tld => tld.replace(/^\./, '')).join(','),
+        lengthMax: options.lengthMax || 25,
+        lengthMin: options.lengthMin || 4,
+        limit: maxResults,
+        waitMs,
+      };
+
+      logger.info('GoDaddy domain suggestions request:', requestParams);
+
       const response = await this.client.get('/v1/domains/suggest', {
-        params: {
-          query,
-          country: 'US',
-          city: options.city || 'New York',
-          sources: options.sources || 'CC_TLD',
-          tlds: tlds.join(','),
-          lengthMax: options.lengthMax || 25,
-          lengthMin: options.lengthMin || 4,
-          limit: maxResults,
-          waitMs,
-        },
+        params: requestParams,
       });
+
+      logger.info(`GoDaddy returned ${response.data.length} suggestions`);
 
       return response.data.map((suggestion) => ({
         domain: suggestion.domain,
@@ -280,6 +327,12 @@ class GoDaddyService {
    * @returns {Promise<Object>} - Pricing information
    */
   async getDomainPricing(tld) {
+    this._ensureInitialized();
+    if (!this.client) {
+      // Return fallback pricing if API not configured
+      return this.getFallbackPricing(tld);
+    }
+    
     try {
       // Remove leading dot if present
       const cleanTld = tld.replace(/^\./, '');
@@ -351,6 +404,9 @@ class GoDaddyService {
    * @returns {Promise<Object>} - Registration result
    */
   async registerDomain(domainData) {
+    this._ensureInitialized();
+    if (!this.client) throw new Error('GoDaddy API not configured');
+    
     try {
       const {
         domain,
@@ -404,6 +460,9 @@ class GoDaddyService {
    * @returns {Promise<Object>} - Domain details
    */
   async getDomainDetails(domain) {
+    this._ensureInitialized();
+    if (!this.client) throw new Error('GoDaddy API not configured');
+    
     try {
       const response = await this.client.get(`/v1/domains/${domain}`);
 
@@ -432,6 +491,9 @@ class GoDaddyService {
    * @returns {Promise<Object>} - Renewal result
    */
   async renewDomain(domain, period = 1) {
+    this._ensureInitialized();
+    if (!this.client) throw new Error('GoDaddy API not configured');
+    
     try {
       const response = await this.client.post(`/v1/domains/${domain}/renew`, {
         period,
@@ -458,6 +520,9 @@ class GoDaddyService {
    * @returns {Promise<Object>} - Update result
    */
   async updateNameServers(domain, nameServers) {
+    this._ensureInitialized();
+    if (!this.client) throw new Error('GoDaddy API not configured');
+    
     try {
       await this.client.patch(`/v1/domains/${domain}`, {
         nameServers,
@@ -480,6 +545,9 @@ class GoDaddyService {
    * @returns {Promise<Object>} - Domain contacts
    */
   async getDomainContacts(domain) {
+    this._ensureInitialized();
+    if (!this.client) throw new Error('GoDaddy API not configured');
+    
     try {
       const response = await this.client.get(`/v1/domains/${domain}/contacts`);
 
@@ -502,6 +570,9 @@ class GoDaddyService {
    * @returns {Promise<Object>} - Update result
    */
   async updatePrivacy(domain, privacy) {
+    this._ensureInitialized();
+    if (!this.client) throw new Error('GoDaddy API not configured');
+    
     try {
       await this.client.patch(`/v1/domains/${domain}`, {
         privacy,

@@ -37,31 +37,35 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="w-64 bg-white shadow-lg flex flex-col">
+    <aside className="w-64 bg-white shadow-2xl flex flex-col border-r border-gray-200">
       {/* Logo */}
-      <div className="p-6 border-b">
-        <Link to="/">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+      <div className="p-6 border-b border-gray-200">
+        <Link to="/" className="group">
+          <h1 className="text-3xl font-black bg-gradient-to-r from-purple-600 via-purple-500 to-blue-600 bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-200">
             SaaSify
           </h1>
+          <p className="text-xs text-gray-500 mt-1 font-medium">Domain Management</p>
         </Link>
       </div>
 
       {/* Menu Items */}
       <nav className="flex-1 p-4">
-        <ul className="space-y-2">
+        <ul className="space-y-1.5">
           {menuItems.map((item) => (
             <li key={item.path}>
               <Link
                 to={item.path}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                className={`group flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 ${
                   isActive(item.path)
-                    ? 'bg-purple-50 text-purple-600'
-                    : 'text-gray-700 hover:bg-gray-50'
+                    ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg scale-105'
+                    : 'text-gray-700 hover:bg-gray-100 hover:translate-x-1'
                 }`}
               >
-                <item.icon size={20} />
-                <span className="font-medium">{item.label}</span>
+                <item.icon size={20} className={isActive(item.path) ? 'drop-shadow-sm' : 'group-hover:scale-110 transition-transform'} />
+                <span className="font-semibold">{item.label}</span>
+                {isActive(item.path) && (
+                  <span className="ml-auto w-2 h-2 bg-white rounded-full shadow-sm"></span>
+                )}
               </Link>
             </li>
           ))}
@@ -69,13 +73,13 @@ export default function Sidebar() {
       </nav>
 
       {/* Logout */}
-      <div className="p-4 border-t">
+      <div className="p-4 border-t border-gray-200">
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 w-full transition-colors"
+          className="group flex items-center gap-3 px-4 py-3.5 rounded-xl text-red-600 hover:bg-red-50 w-full transition-all duration-200 hover:scale-105 hover:shadow-md border-2 border-transparent hover:border-red-200"
         >
-          <LogOut size={20} />
-          <span className="font-medium">Logout</span>
+          <LogOut size={20} className="group-hover:rotate-12 transition-transform" />
+          <span className="font-bold">Logout</span>
         </button>
       </div>
     </aside>

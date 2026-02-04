@@ -14,6 +14,8 @@ let transporter = null;
 
 // Create email transporter
 const createTransporter = () => {
+  logger.info(`Creating email transporter with provider: ${process.env.EMAIL_PROVIDER || 'smtp'}`);
+  
   if (process.env.EMAIL_PROVIDER === 'sendgrid') {
     return nodemailer.createTransport({
       host: 'smtp.sendgrid.net',

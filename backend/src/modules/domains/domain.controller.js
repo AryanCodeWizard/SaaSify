@@ -4,6 +4,7 @@ import ActivityLog from '../../models/ActivityLog.js';
 import Domain from '../../models/Domain.js';
 import godaddyService from '../../services/godaddy.service.js';
 import logger from '../../utils/logger.js';
+import mongoose from 'mongoose';
 
 /**
  * Search domains
@@ -39,7 +40,7 @@ export const searchDomains = async (req, res) => {
       }
     } else {
       // Get suggestions for keyword
-      const selectedTlds = tlds || ['.com', '.net', '.org', '.io', '.co'];
+      const selectedTlds = tlds || ['.com', '.net', '.org', '.io', '.co','.us'];
       const suggestions = await godaddyService.getDomainSuggestions(query, {
         tlds: selectedTlds,
         maxResults: parseInt(maxResults) || 20,
@@ -52,7 +53,7 @@ export const searchDomains = async (req, res) => {
           domains.slice(0, 10)
         );
 
-        // Get pricing for available domains
+      //  Get pricing for unique TLDs
         const tldSet = new Set();
         availabilityResults.forEach((result) => {
           const tld = result.domain.split('.').pop();
@@ -85,6 +86,17 @@ export const searchDomains = async (req, res) => {
         results = suggestions;
       }
 
+
+
+  
+
+
+
+
+
+
+
+
       // Log activity
       if (userId) {
         await ActivityLog.create({
@@ -111,10 +123,13 @@ export const searchDomains = async (req, res) => {
   }
 };
 
+
 /**
  * Check domain availability
  * GET /api/domains/availability/:domain
  */
+
+
 export const checkAvailability = async (req, res) => {
   try {
     const { domain } = req.params;
@@ -320,6 +335,11 @@ export const getDomainById = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.userId;
+
+    // Validate MongoDB ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return errorResponse(res, 'Invalid domain ID format', 400);
+    }
 
     const domain = await Domain.findOne({ _id: id, userId }).lean();
 

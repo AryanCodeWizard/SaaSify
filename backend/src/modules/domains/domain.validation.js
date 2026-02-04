@@ -7,16 +7,41 @@ export const domainSearchSchema = Joi.object({
     'string.max': 'Search query cannot exceed 100 characters',
     'any.required': 'Search query is required',
   }),
-  tlds: Joi.array()
-    .items(Joi.string().pattern(/^\.[a-z]{2,}$/))
-    .max(10)
+  tlds: Joi.alternatives()
+    .try(
+      Joi.array().items(Joi.string().pattern(/^\.[a-z]{2,}$/)).max(10),
+      Joi.string().custom((value, helpers) => {
+        // Convert comma-separated string to array
+        const tldArray = value.split(',').map(tld => {
+          tld = tld.trim();
+          // Add dot prefix if not present
+          return tld.startsWith('.') ? tld : `.${tld}`;
+        });
+        
+        if (tldArray.length > 10) {
+          return helpers.error('array.max');
+        }
+        
+        // Validate each TLD
+        for (const tld of tldArray) {
+          if (!/^\.[a-z]{2,}$/.test(tld)) {
+            return helpers.error('string.pattern.base');
+          }
+        }
+        
+        return tldArray;
+      })
+    )
     .messages({
       'array.max': 'Maximum 10 TLDs allowed',
-      'string.pattern.base': 'Invalid TLD format (must start with dot, e.g., .com)',
+      'string.pattern.base': 'Invalid TLD format (must be like .com or com)',
     }),
   maxResults: Joi.number().integer().min(1).max(50).default(20),
   checkAvailability: Joi.boolean().default(true),
 });
+
+
+
 
 // Domain availability check validation
 export const domainAvailabilitySchema = Joi.object({
@@ -56,10 +81,36 @@ export const domainSuggestionsSchema = Joi.object({
     'string.max': 'Query cannot exceed 50 characters',
     'any.required': 'Query is required',
   }),
-  tlds: Joi.array()
-    .items(Joi.string().pattern(/^\.[a-z]{2,}$/))
-    .max(10)
-    .default(['.com', '.net', '.org', '.io', '.co']),
+  tlds: Joi.alternatives()
+    .try(
+      Joi.array().items(Joi.string().pattern(/^\.[a-z]{2,}$/)).max(10),
+      Joi.string().custom((value, helpers) => {
+        // Convert comma-separated string to array
+        const tldArray = value.split(',').map(tld => {
+          tld = tld.trim();
+          // Add dot prefix if not present
+          return tld.startsWith('.') ? tld : `.${tld}`;
+        });
+        
+        if (tldArray.length > 10) {
+          return helpers.error('array.max');
+        }
+        
+        // Validate each TLD
+        for (const tld of tldArray) {
+          if (!/^\.[a-z]{2,}$/.test(tld)) {
+            return helpers.error('string.pattern.base');
+          }
+        }
+        
+        return tldArray;
+      })
+    )
+    .default(['.com', '.net', '.org', '.io', '.co'])
+    .messages({
+      'array.max': 'Maximum 10 TLDs allowed',
+      'string.pattern.base': 'Invalid TLD format (must be like .com or com)',
+    }),
   maxResults: Joi.number().integer().min(5).max(50).default(20),
   lengthMin: Joi.number().integer().min(2).max(20).default(4),
   lengthMax: Joi.number().integer().min(5).max(63).default(25),

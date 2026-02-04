@@ -7,6 +7,7 @@ import {
   removeCoupon,
   removeFromCart,
   updateCartItem,
+  verifyOrderPayment,
 } from './cart.controller.js';
 import {
   addToCartSchema,
@@ -81,5 +82,12 @@ router.delete('/coupon', removeCoupon);
  * @access  Private
  */
 router.post('/checkout', validate(checkoutSchema), checkout);
+
+/**
+ * @route   POST /api/cart/verify-payment
+ * @desc    Verify Razorpay payment for order
+ * @access  Private
+ */
+router.post('/verify-payment', verifyOrderPayment);
 
 export default router;

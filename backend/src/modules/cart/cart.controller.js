@@ -9,6 +9,7 @@ import { domainRegistrationQueue } from '../../queues/domain.queue.js';
 import godaddyService from '../../services/godaddy.service.js';
 import logger from '../../utils/logger.js';
 import mongoose from 'mongoose';
+import razorpayService from '../../services/razorpay.service.js';
 
 // In-memory cart storage (in production, use Redis or database)
 const cartStorage = new Map();
@@ -324,12 +325,13 @@ export const checkout = async (req, res) => {
 
   try {
     const userId = req.user.userId;
-    const { paymentMethod, billingDetails, domainContacts, termsAgreed } = req.body;
+    const { paymentMethod, billingInfo, domainContacts, termsAgreed } = req.body;
 
     const cartKey = getCartKey(userId);
     const cart = cartStorage.get(cartKey);
 
     if (!cart || cart.items.length === 0) {
+      await session.abortTransaction();
       return errorResponse(res, 'Cart is empty', 400);
     }
 
@@ -365,6 +367,7 @@ export const checkout = async (req, res) => {
             name: item.name,
             quantity: item.quantity,
             price: item.price,
+            period: item.period,
             total: item.price * item.quantity * item.period,
             metadata: item.metadata,
           })),
@@ -375,12 +378,66 @@ export const checkout = async (req, res) => {
           currency: cart.currency,
           status: paymentMethod === 'wallet' ? 'processing' : 'pending',
           paymentMethod,
-          billingDetails,
+          billingInfo,
           coupon: cart.coupon,
         },
       ],
       { session }
     );
+
+    // Handle Razorpay payment
+    if (paymentMethod === 'razorpay') {
+      // Create Razorpay order
+      const razorpayOrder = await razorpayService.createOrder({
+        amount: cart.total,
+        currency: cart.currency,
+        receipt: orderNumber,
+        notes: {
+          orderId: order[0]._id.toString(),
+          orderNumber,
+          userId,
+        },
+      });
+
+      // Store Razorpay order ID in order
+      order[0].paymentDetails = {
+        provider: 'razorpay',
+        razorpayOrderId: razorpayOrder.id,
+      };
+      await order[0].save({ session });
+
+      // Commit transaction
+      await session.commitTransaction();
+
+      // Log activity
+      await ActivityLog.create({
+        userId,
+        clientId: client._id,
+        action: 'order_create',
+        category: 'order',
+        description: `Created order ${orderNumber} with Razorpay`,
+        metadata: {
+          orderNumber,
+          total: cart.total,
+          itemsCount: cart.items.length,
+          paymentMethod,
+          razorpayOrderId: razorpayOrder.id,
+        },
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        status: 'success',
+      });
+
+      // Return order details with Razorpay info
+      return successResponse(res, 'Order created successfully', {
+        orderId: order[0]._id,
+        orderNumber: order[0].orderNumber,
+        amount: cart.total * 100, // Convert to paise for Razorpay
+        currency: cart.currency,
+        razorpayOrderId: razorpayOrder.id,
+        razorpayKeyId: process.env.RAZORPAY_KEY_ID,
+      });
+    }
 
     // Process payment
     if (paymentMethod === 'wallet') {
@@ -587,6 +644,209 @@ export const checkout = async (req, res) => {
     await session.abortTransaction();
     logger.error('Checkout error:', error);
     return errorResponse(res, 'Failed to process checkout', 500);
+  } finally {
+    session.endSession();
+  }
+};
+
+/**
+ * Verify Razorpay payment for order
+ * POST /api/cart/verify-payment
+ */
+export const verifyOrderPayment = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const userId = req.user.userId;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = req.body;
+
+    // Find order
+    const order = await Order.findById(orderId).session(session);
+    if (!order) {
+      await session.abortTransaction();
+      return errorResponse(res, 'Order not found', 404);
+    }
+
+    // Verify ownership
+    if (order.userId.toString() !== userId) {
+      await session.abortTransaction();
+      return errorResponse(res, 'Access denied', 403);
+    }
+
+    // Verify Razorpay signature
+    const isValid = razorpayService.verifyPaymentSignature({
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+    });
+
+    if (!isValid) {
+      await session.abortTransaction();
+      logger.warn(`Invalid Razorpay signature for order ${order.orderNumber}`);
+      return errorResponse(res, 'Payment verification failed', 400);
+    }
+
+    // Get payment details from Razorpay
+    const payment = await razorpayService.getPayment(razorpay_payment_id);
+
+    // Get client
+    const client = await Client.findOne({ userId }).session(session);
+
+    // Create transaction
+    await Transaction.create([{
+      userId,
+      clientId: client._id,
+      orderId: order._id,
+      type: 'credit',
+      amount: payment.amount / 100, // Convert from paise to rupees
+      currency: payment.currency.toUpperCase(),
+      description: `Payment for order ${order.orderNumber}`,
+      status: 'completed',
+      paymentMethod: 'razorpay',
+      metadata: {
+        razorpayOrderId: razorpay_order_id,
+        razorpayPaymentId: razorpay_payment_id,
+        paymentMethod: payment.method,
+        email: payment.email,
+        contact: payment.contact,
+      },
+    }], { session });
+
+    // Update order status
+    order.status = 'paid';
+    order.paidAt = new Date();
+    order.paymentDetails = {
+      ...order.paymentDetails,
+      razorpayPaymentId: razorpay_payment_id,
+      paymentMethod: payment.method,
+    };
+    await order.save({ session });
+
+    // Process domain registrations if there are domain items
+    const domainItems = order.items.filter(item => item.type === 'domain');
+    const domainJobs = [];
+
+    for (const item of domainItems) {
+      // Create domain record
+      const domain = await Domain.create([{
+        userId,
+        clientId: client._id,
+        orderId: order._id,
+        domainName: item.metadata?.domain || item.name,
+        tld: item.metadata?.tld,
+        registeredAt: null,
+        expiresAt: new Date(Date.now() + (item.period || 1) * 365 * 24 * 60 * 60 * 1000),
+        autoRenew: item.metadata?.autoRenew !== false,
+        privacyProtection: item.metadata?.privacy !== false,
+        status: 'pending',
+        registrationPeriod: item.period || 1,
+        registrationPrice: item.price,
+        renewalPrice: item.price,
+        nameservers: item.metadata?.nameServers || [],
+      }], { session });
+
+      domainJobs.push({
+        domainId: domain[0]._id,
+        domainData: {
+          domain: domain[0].domainName,
+          period: item.period || 1,
+          renewAuto: item.metadata?.autoRenew !== false,
+          privacy: item.metadata?.privacy !== false,
+          nameServers: item.metadata?.nameServers || [],
+          contactRegistrant: {
+            firstName: client.firstName,
+            lastName: client.lastName,
+            email: client.email,
+            phone: client.phone || '+1.0000000000',
+            organization: client.companyName || '',
+            address: {
+              street: order.billingInfo?.address || '123 Main St',
+              city: order.billingInfo?.city || 'New York',
+              state: order.billingInfo?.state || 'NY',
+              country: order.billingInfo?.country || 'US',
+              zipCode: order.billingInfo?.postalCode || '10001',
+            },
+          },
+          consent: {
+            agreementKeys: ['DNRA'],
+            agreedBy: client.email,
+            agreedAt: new Date().toISOString(),
+          },
+        },
+      });
+    }
+
+    // Commit transaction
+    await session.commitTransaction();
+
+    // Queue domain registration jobs (outside transaction)
+    for (const job of domainJobs) {
+      try {
+        await domainRegistrationQueue.add(
+          'register-domain',
+          {
+            orderId: order._id,
+            domainId: job.domainId,
+            userId,
+            domainData: job.domainData,
+          },
+          {
+            priority: 1,
+            attempts: 3,
+            backoff: {
+              type: 'exponential',
+              delay: 5000,
+            },
+          }
+        );
+
+        logger.info(`✅ Queued domain registration for ${job.domainData.domain}`);
+      } catch (queueError) {
+        logger.error(`Failed to queue domain registration:`, queueError);
+        await Domain.findByIdAndUpdate(job.domainId, {
+          status: 'failed',
+          notes: `Failed to queue for registration: ${queueError.message}`,
+        });
+      }
+    }
+
+    // Clear cart
+    const cartKey = getCartKey(userId);
+    cartStorage.delete(cartKey);
+
+    // Log activity
+    await ActivityLog.create({
+      userId,
+      clientId: client._id,
+      action: 'payment_success',
+      category: 'payment',
+      description: `Payment verified for order ${order.orderNumber}`,
+      metadata: {
+        orderNumber: order.orderNumber,
+        amount: payment.amount / 100,
+        paymentId: razorpay_payment_id,
+      },
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+      status: 'success',
+    });
+
+    logger.info(`✅ Payment verified successfully for order ${order.orderNumber}`);
+
+    return successResponse(res, 'Payment verified successfully', {
+      order: {
+        id: order._id,
+        orderNumber: order.orderNumber,
+        status: order.status,
+        total: order.totalAmount,
+        paidAt: order.paidAt,
+      },
+    });
+  } catch (error) {
+    await session.abortTransaction();
+    logger.error('Payment verification error:', error);
+    return errorResponse(res, 'Failed to verify payment', 500);
   } finally {
     session.endSession();
   }
