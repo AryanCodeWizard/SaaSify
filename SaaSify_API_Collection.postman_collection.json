@@ -1,0 +1,2224 @@
+{
+  "info": {
+    "name": "SaaSify Hosting Platform API",
+    "description": "Complete API collection for SaaSify - A comprehensive hosting platform with domain management, static/dynamic hosting, payments, and invoicing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "saasify"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "serverUrl",
+      "value": "http://localhost:4000",
+      "type": "string"
+    },
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000/api",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{serverUrl}}/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4000",
+              "path": ["health"]
+            }
+          }
+        },
+        {
+          "name": "API Info",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4000",
+              "path": ["api"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.accessToken) {",
+                  "        pm.collectionVariables.set('accessToken', response.data.accessToken);",
+                  "        pm.collectionVariables.set('refreshToken', response.data.refreshToken);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password@123\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"company\": \"Tech Corp\",\n  \"phone\": \"+1234567890\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Verify Email",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"your-64-character-verification-token-here-xxxxxxxxxxxxxxxxxxxxxxx\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/verify-email",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "verify-email"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.accessToken) {",
+                  "        pm.collectionVariables.set('accessToken', response.data.accessToken);",
+                  "        pm.collectionVariables.set('refreshToken', response.data.refreshToken);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password@123\",\n  \"twoFACode\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "logout"]
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.accessToken) {",
+                  "        pm.collectionVariables.set('accessToken', response.data.accessToken);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh-token",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "refresh-token"]
+            }
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/forgot-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "forgot-password"]
+            }
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"password-reset-token\",\n  \"password\": \"NewPassword@123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/reset-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "reset-password"]
+            }
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"Password@123\",\n  \"newPassword\": \"NewPassword@123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/change-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "change-password"]
+            }
+          }
+        },
+        {
+          "name": "Enable 2FA",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/enable-2fa",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "enable-2fa"]
+            }
+          }
+        },
+        {
+          "name": "Verify 2FA",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/verify-2fa",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "verify-2fa"]
+            }
+          }
+        },
+        {
+          "name": "Disable 2FA",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/disable-2fa",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "disable-2fa"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Client Management",
+      "item": [
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/clients/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "me"]
+            }
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"company\": \"Tech Corp\",\n  \"phone\": \"+1234567890\",\n  \"address\": {\n    \"street\": \"123 Main St\",\n    \"city\": \"New York\",\n    \"state\": \"NY\",\n    \"zipCode\": \"10001\",\n    \"country\": \"US\"\n  },\n  \"billingAddress\": {\n    \"street\": \"123 Main St\",\n    \"city\": \"New York\",\n    \"state\": \"NY\",\n    \"zipCode\": \"10001\",\n    \"country\": \"US\"\n  },\n  \"currency\": \"USD\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/clients/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "me"]
+            }
+          }
+        },
+        {
+          "name": "Get Wallet",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/clients/me/wallet",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "me", "wallet"]
+            }
+          }
+        },
+        {
+          "name": "Add Wallet Credit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 100,\n  \"paymentMethod\": \"razorpay\",\n  \"paymentDetails\": {\n    \"transactionId\": \"txn_xxx\",\n    \"paymentGateway\": \"razorpay\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/clients/me/wallet/add",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "me", "wallet", "add"]
+            }
+          }
+        },
+        {
+          "name": "Get Activity Logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/clients/me/activity?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "me", "activity"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Get Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/stats?period=30d",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "stats"],
+              "query": [
+                {
+                  "key": "period",
+                  "value": "30d"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users?page=1&limit=20&role=client&status=active",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "users"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "role",
+                  "value": "client"
+                },
+                {
+                  "key": "status",
+                  "value": "active"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get User By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "users", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "userId"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"client\",\n  \"status\": \"active\",\n  \"emailVerified\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "users", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "userId"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "users", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "userId"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Suspend User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Policy violation\",\n  \"duration\": 30\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/:id/suspend",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "users", ":id", "suspend"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "userId"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Add Client Credit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 100,\n  \"reason\": \"Promotional credit\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/clients/:id/credit",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "clients", ":id", "credit"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "clientId"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/audit-logs?page=1&limit=50&action=login&userId=",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "audit-logs"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                },
+                {
+                  "key": "action",
+                  "value": "login"
+                },
+                {
+                  "key": "userId",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Domains",
+      "item": [
+        {
+          "name": "Search Domains",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/domains/search?query=example&tlds=.com,.net,.org",
+              "host": ["{{baseUrl}}"],
+              "path": ["domains", "search"],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "example"
+                },
+                {
+                  "key": "tlds",
+                  "value": ".com,.net,.org",
+                  "description": "Array of TLDs (must start with dot)"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Check Domain Availability",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/domains/availability/example.com",
+              "host": ["{{baseUrl}}"],
+              "path": ["domains", "availability", "example.com"]
+            }
+          }
+        },
+        {
+          "name": "Get Domain Suggestions",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/domains/suggestions?query=tech&tlds=.com,.io,.co&maxResults=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["domains", "suggestions"],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "tech"
+                },
+                {
+                  "key": "tlds",
+                  "value": ".com,.io,.co",
+                  "description": "Array of TLDs with dots"
+                },
+                {
+                  "key": "maxResults",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Domain Pricing",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/domains/pricing/com",
+              "host": ["{{baseUrl}}"],
+              "path": ["domains", "pricing", "com"]
+            }
+          }
+        },
+        {
+          "name": "Get Supported TLDs",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/domains/tlds",
+              "host": ["{{baseUrl}}"],
+              "path": ["domains", "tlds"]
+            }
+          }
+        },
+        {
+          "name": "Get My Domains",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/domains/my-domains",
+              "host": ["{{baseUrl}}"],
+              "path": ["domains", "my-domains"]
+            }
+          }
+        },
+        {
+          "name": "Get Domain By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/domains/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["domains", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "domainId"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Initiate Domain Transfer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"domain\": \"example.com\",\n  \"authCode\": \"YOUR-AUTH-CODE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/domains/transfer",
+              "host": ["{{baseUrl}}"],
+              "path": ["domains", "transfer"]
+            }
+          }
+        },
+        {
+          "name": "Get Transfer Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/domains/transfer/status/:domain",
+              "host": ["{{baseUrl}}"],
+              "path": ["domains", "transfer", "status", ":domain"],
+              "variable": [
+                {
+                  "key": "domain",
+                  "value": "example.com"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List DNS Records",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/domains/dns/:domain",
+              "host": ["{{baseUrl}}"],
+              "path": ["domains", "dns", ":domain"],
+              "variable": [
+                {
+                  "key": "domain",
+                  "value": "example.com"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Upsert DNS Record",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"A\",\n  \"name\": \"@\",\n  \"data\": \"192.168.1.1\",\n  \"ttl\": 3600\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/domains/dns/:domain",
+              "host": ["{{baseUrl}}"],
+              "path": ["domains", "dns", ":domain"],
+              "variable": [
+                {
+                  "key": "domain",
+                  "value": "example.com"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete DNS Record",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/domains/dns/:domain/:type/:name",
+              "host": ["{{baseUrl}}"],
+              "path": ["domains", "dns", ":domain", ":type", ":name"],
+              "variable": [
+                {
+                  "key": "domain",
+                  "value": "example.com"
+                },
+                {
+                  "key": "type",
+                  "value": "A"
+                },
+                {
+                  "key": "name",
+                  "value": "@"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Domain Contacts",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"registrant\": {\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"email\": \"john@example.com\",\n    \"phone\": \"+1.1234567890\",\n    \"organization\": \"Tech Corp\",\n    \"address\": {\n      \"street\": \"123 Main St\",\n      \"city\": \"New York\",\n      \"state\": \"NY\",\n      \"postalCode\": \"10001\",\n      \"country\": \"US\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/domains/contacts/:domain",
+              "host": ["{{baseUrl}}"],
+              "path": ["domains", "contacts", ":domain"],
+              "variable": [
+                {
+                  "key": "domain",
+                  "value": "example.com"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Set Domain Lock",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"locked\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/domains/lock/:domain",
+              "host": ["{{baseUrl}}"],
+              "path": ["domains", "lock", ":domain"],
+              "variable": [
+                {
+                  "key": "domain",
+                  "value": "example.com"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Set Domain Forwarding",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://www.example.com\",\n  \"type\": \"permanent\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/domains/forwarding/:domain",
+              "host": ["{{baseUrl}}"],
+              "path": ["domains", "forwarding", ":domain"],
+              "variable": [
+                {
+                  "key": "domain",
+                  "value": "example.com"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Remove Domain Forwarding",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/domains/forwarding/:domain",
+              "host": ["{{baseUrl}}"],
+              "path": ["domains", "forwarding", ":domain"],
+              "variable": [
+                {
+                  "key": "domain",
+                  "value": "example.com"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cart",
+      "item": [
+        {
+          "name": "Get Cart",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cart",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart"]
+            }
+          }
+        },
+        {
+          "name": "Add Item to Cart",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"domain\",\n  \"itemId\": \"example.com\",\n  \"name\": \"example.com - Domain Registration\",\n  \"price\": 12.99,\n  \"period\": 1,\n  \"quantity\": 1,\n  \"currency\": \"USD\",\n  \"metadata\": {\n    \"domain\": \"example.com\",\n    \"tld\": \".com\",\n    \"autoRenew\": true,\n    \"privacy\": true\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cart/add",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart", "add"]
+            }
+          }
+        },
+        {
+          "name": "Update Cart Item",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 1,\n  \"period\": 2,\n  \"metadata\": {\n    \"autoRenew\": false\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cart/:itemId",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart", ":itemId"],
+              "variable": [
+                {
+                  "key": "itemId",
+                  "value": "cartItemId"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Remove Item from Cart",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cart/:itemId",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart", ":itemId"],
+              "variable": [
+                {
+                  "key": "itemId",
+                  "value": "cartItemId"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Clear Cart",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cart/clear",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart", "clear"]
+            }
+          }
+        },
+        {
+          "name": "Apply Coupon",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"SAVE20\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cart/coupon",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart", "coupon"]
+            }
+          }
+        },
+        {
+          "name": "Remove Coupon",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cart/coupon",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart", "coupon"]
+            }
+          }
+        },
+        {
+          "name": "Checkout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentMethod\": \"razorpay\",\n  \"billingDetails\": {\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"email\": \"john@example.com\",\n    \"phone\": \"+1234567890\",\n    \"company\": \"Tech Corp\",\n    \"address\": {\n      \"street\": \"123 Main St\",\n      \"city\": \"New York\",\n      \"state\": \"NY\",\n      \"country\": \"US\",\n      \"zipCode\": \"10001\"\n    },\n    \"taxId\": \"\"\n  },\n  \"domainContacts\": {\n    \"useDefaultContact\": true\n  },\n  \"termsAgreed\": true,\n  \"newsletterOptIn\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cart/checkout",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart", "checkout"]
+            }
+          }
+        },
+        {
+          "name": "Verify Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"razorpay_order_id\": \"order_xxx\",\n  \"razorpay_payment_id\": \"pay_xxx\",\n  \"razorpay_signature\": \"signature_xxx\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cart/verify-payment",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart", "verify-payment"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Invoices",
+      "item": [
+        {
+          "name": "Get My Invoices",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/invoices?page=1&limit=20&status=unpaid",
+              "host": ["{{baseUrl}}"],
+              "path": ["invoices"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "status",
+                  "value": "unpaid"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Invoice By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/invoices/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["invoices", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "invoiceId"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Download Invoice PDF",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/invoices/:id/pdf",
+              "host": ["{{baseUrl}}"],
+              "path": ["invoices", ":id", "pdf"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "invoiceId"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Pay Invoice",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"gateway\": \"razorpay\",\n  \"paymentMethod\": \"card\",\n  \"paymentData\": {}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/invoices/:id/pay",
+              "host": ["{{baseUrl}}"],
+              "path": ["invoices", ":id", "pay"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "invoiceId"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Admin - Create Invoice",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clientId\": \"clientId\",\n  \"orderId\": \"orderId\",\n  \"items\": [\n    {\n      \"type\": \"domain\",\n      \"description\": \"Domain Registration - example.com\",\n      \"domainId\": \"domainId\",\n      \"quantity\": 1,\n      \"unitPrice\": 12.99,\n      \"discount\": 0,\n      \"taxAmount\": 0\n    }\n  ],\n  \"dueDate\": \"2026-03-15\",\n  \"notes\": \"Invoice for domain registration\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/invoices/admin/create",
+              "host": ["{{baseUrl}}"],
+              "path": ["invoices", "admin", "create"]
+            }
+          }
+        },
+        {
+          "name": "Admin - Get All Invoices",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/invoices/admin/all?page=1&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["invoices", "admin", "all"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Admin - Update Invoice",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"paid\",\n  \"notes\": \"Payment received manually\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/invoices/admin/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["invoices", "admin", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "invoiceId"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Admin - Delete Invoice",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/invoices/admin/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["invoices", "admin", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "invoiceId"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Admin - Send Invoice Email",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/invoices/admin/:id/send-email",
+              "host": ["{{baseUrl}}"],
+              "path": ["invoices", "admin", ":id", "send-email"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "invoiceId"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Razorpay - Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 1299,\n  \"currency\": \"INR\",\n  \"invoiceId\": \"invoiceId\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments/razorpay/create-order",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "razorpay", "create-order"]
+            }
+          }
+        },
+        {
+          "name": "Razorpay - Verify Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"razorpay_order_id\": \"order_xxx\",\n  \"razorpay_payment_id\": \"pay_xxx\",\n  \"razorpay_signature\": \"signature_xxx\",\n  \"invoiceId\": \"invoiceId\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments/razorpay/verify",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "razorpay", "verify"]
+            }
+          }
+        },
+        {
+          "name": "Razorpay - Webhook",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Razorpay-Signature",
+                "value": "signature"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments/razorpay/webhook",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "razorpay", "webhook"]
+            }
+          }
+        },
+        {
+          "name": "Stripe - Create Payment Intent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 1299,\n  \"currency\": \"usd\",\n  \"invoiceId\": \"invoiceId\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments/stripe/create-intent",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "stripe", "create-intent"]
+            }
+          }
+        },
+        {
+          "name": "Stripe - Confirm Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_intent_id\": \"pi_xxx\",\n  \"invoiceId\": \"invoiceId\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments/stripe/confirm",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "stripe", "confirm"]
+            }
+          }
+        },
+        {
+          "name": "Stripe - Webhook",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Stripe-Signature",
+                "value": "signature"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments/stripe/webhook",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "stripe", "webhook"]
+            }
+          }
+        },
+        {
+          "name": "Stripe - Get Config",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/payments/stripe/config",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "stripe", "config"]
+            }
+          }
+        },
+        {
+          "name": "Wallet - Create Razorpay Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 1000,\n  \"currency\": \"INR\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments/wallet/razorpay/create-order",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "wallet", "razorpay", "create-order"]
+            }
+          }
+        },
+        {
+          "name": "Create Refund",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transactionId\": \"txn_xxx\",\n  \"amount\": 1299,\n  \"reason\": \"Customer requested refund\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments/refund",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "refund"]
+            }
+          }
+        },
+        {
+          "name": "Get Refund Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/payments/refund/:refundId",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "refund", ":refundId"],
+              "variable": [
+                {
+                  "key": "refundId",
+                  "value": "rfnd_xxx"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Wallet",
+      "item": [
+        {
+          "name": "Get Wallet Balance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/wallet/balance",
+              "host": ["{{baseUrl}}"],
+              "path": ["wallet", "balance"]
+            }
+          }
+        },
+        {
+          "name": "Get Wallet Transactions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/wallet/transactions?page=1&limit=20&type=credit",
+              "host": ["{{baseUrl}}"],
+              "path": ["wallet", "transactions"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "type",
+                  "value": "credit"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Add Funds to Wallet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 100,\n  \"gateway\": \"razorpay\",\n  \"paymentData\": {}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/wallet/add-funds",
+              "host": ["{{baseUrl}}"],
+              "path": ["wallet", "add-funds"]
+            }
+          }
+        },
+        {
+          "name": "Pay Invoice from Wallet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"invoiceId\": \"invoiceId\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/wallet/pay-invoice",
+              "host": ["{{baseUrl}}"],
+              "path": ["wallet", "pay-invoice"]
+            }
+          }
+        },
+        {
+          "name": "Admin - Adjust Wallet Balance",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clientId\": \"clientId\",\n  \"amount\": 100,\n  \"type\": \"credit\",\n  \"reason\": \"Promotional credit\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/wallet/admin/adjust",
+              "host": ["{{baseUrl}}"],
+              "path": ["wallet", "admin", "adjust"]
+            }
+          }
+        },
+        {
+          "name": "Admin - Get All Transactions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/wallet/admin/transactions?page=1&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["wallet", "admin", "transactions"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hosting - Static",
+      "item": [
+        {
+          "name": "Create Static Hosting",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"domainId\": \"domainId\",\n  \"plan\": {\n    \"name\": \"Basic\",\n    \"price\": 9.99,\n    \"billingCycle\": \"monthly\",\n    \"storage\": 10,\n    \"bandwidth\": 100\n  },\n  \"enableSsl\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/hosting/static/create",
+              "host": ["{{baseUrl}}"],
+              "path": ["hosting", "static", "create"]
+            }
+          }
+        },
+        {
+          "name": "List Static Hosting Services",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/hosting/static?status=active",
+              "host": ["{{baseUrl}}"],
+              "path": ["hosting", "static"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "active"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Static Hosting Service",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/hosting/static/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["hosting", "static", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "serviceId"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Generate Upload URL",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fileName\": \"index.html\",\n  \"contentType\": \"text/html\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/hosting/static/:id/upload-url",
+              "host": ["{{baseUrl}}"],
+              "path": ["hosting", "static", ":id", "upload-url"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "serviceId"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Files",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/hosting/static/:id/files",
+              "host": ["{{baseUrl}}"],
+              "path": ["hosting", "static", ":id", "files"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "serviceId"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete File",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fileName\": \"old-file.html\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/hosting/static/:id/files",
+              "host": ["{{baseUrl}}"],
+              "path": ["hosting", "static", ":id", "files"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "serviceId"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Invalidate Cache",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paths\": [\"/*\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/hosting/static/:id/invalidate",
+              "host": ["{{baseUrl}}"],
+              "path": ["hosting", "static", ":id", "invalidate"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "serviceId"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Terminate Static Hosting",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/hosting/static/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["hosting", "static", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "serviceId"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hosting - Dynamic",
+      "item": [
+        {
+          "name": "Create Dynamic Hosting",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"domainId\": \"domainId\",\n  \"plan\": {\n    \"name\": \"Standard\",\n    \"price\": 29.99,\n    \"billingCycle\": \"monthly\"\n  },\n  \"instanceType\": \"t2.micro\",\n  \"runtime\": \"nodejs\",\n  \"appPort\": 3000,\n  \"database\": {\n    \"enabled\": true,\n    \"engine\": \"mysql\",\n    \"instanceClass\": \"db.t3.micro\",\n    \"storage\": 20\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/hosting/dynamic/create",
+              "host": ["{{baseUrl}}"],
+              "path": ["hosting", "dynamic", "create"]
+            }
+          }
+        },
+        {
+          "name": "List Dynamic Hosting Services",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/hosting/dynamic?status=active",
+              "host": ["{{baseUrl}}"],
+              "path": ["hosting", "dynamic"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "active"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Dynamic Hosting Service",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/hosting/dynamic/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["hosting", "dynamic", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "serviceId"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get SSH Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/hosting/dynamic/:id/ssh",
+              "host": ["{{baseUrl}}"],
+              "path": ["hosting", "dynamic", ":id", "ssh"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "serviceId"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Database Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/hosting/dynamic/:id/database",
+              "host": ["{{baseUrl}}"],
+              "path": ["hosting", "dynamic", ":id", "database"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "serviceId"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Instance Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/hosting/dynamic/:id/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["hosting", "dynamic", ":id", "status"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "serviceId"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Terminate Dynamic Hosting",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/hosting/dynamic/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["hosting", "dynamic", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "serviceId"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hosting - DNS",
+      "item": [
+        {
+          "name": "Create Hosted Zone",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"domainId\": \"domainId\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/hosting/dns/zones",
+              "host": ["{{baseUrl}}"],
+              "path": ["hosting", "dns", "zones"]
+            }
+          }
+        },
+        {
+          "name": "Get Hosted Zone",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/hosting/dns/zones/:domainId",
+              "host": ["{{baseUrl}}"],
+              "path": ["hosting", "dns", "zones", ":domainId"],
+              "variable": [
+                {
+                  "key": "domainId",
+                  "value": "domainId"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Hosted Zone",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/hosting/dns/zones/:domainId",
+              "host": ["{{baseUrl}}"],
+              "path": ["hosting", "dns", "zones", ":domainId"],
+              "variable": [
+                {
+                  "key": "domainId",
+                  "value": "domainId"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List DNS Records",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/hosting/dns/records/:domainId",
+              "host": ["{{baseUrl}}"],
+              "path": ["hosting", "dns", "records", ":domainId"],
+              "variable": [
+                {
+                  "key": "domainId",
+                  "value": "domainId"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Upsert DNS Record",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"www\",\n  \"type\": \"A\",\n  \"value\": \"192.168.1.1\",\n  \"ttl\": 3600\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/hosting/dns/records/:domainId",
+              "host": ["{{baseUrl}}"],
+              "path": ["hosting", "dns", "records", ":domainId"],
+              "variable": [
+                {
+                  "key": "domainId",
+                  "value": "domainId"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete DNS Record",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"www\",\n  \"type\": \"A\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/hosting/dns/records/:domainId",
+              "host": ["{{baseUrl}}"],
+              "path": ["hosting", "dns", "records", ":domainId"],
+              "variable": [
+                {
+                  "key": "domainId",
+                  "value": "domainId"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Default DNS Records",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ipAddress\": \"192.168.1.1\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/hosting/dns/default/:domainId",
+              "host": ["{{baseUrl}}"],
+              "path": ["hosting", "dns", "default", ":domainId"],
+              "variable": [
+                {
+                  "key": "domainId",
+                  "value": "domainId"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Check DNS Propagation",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/hosting/dns/check/:domainId",
+              "host": ["{{baseUrl}}"],
+              "path": ["hosting", "dns", "check", ":domainId"],
+              "variable": [
+                {
+                  "key": "domainId",
+                  "value": "domainId"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Route53 Domains",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/hosting/dns/domains",
+              "host": ["{{baseUrl}}"],
+              "path": ["hosting", "dns", "domains"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
