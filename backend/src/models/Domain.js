@@ -12,7 +12,7 @@ const domainSchema = new mongoose.Schema(
     orderId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Order',
-      required: true,
+      required: false, // Optional for external/imported domains
     },
     domainName: {
       type: String,
@@ -189,6 +189,39 @@ const domainSchema = new mongoose.Schema(
           country: String,
           postalCode: String,
         },
+      },
+    },
+    // AWS Route53 Integration
+    aws: {
+      hostedZoneId: {
+        type: String,
+        sparse: true,
+        index: true,
+      },
+      hostedZoneName: {
+        type: String,
+      },
+      nameServers: [
+        {
+          type: String,
+        },
+      ],
+      recordSetCount: {
+        type: Number,
+        default: 0,
+      },
+      route53Enabled: {
+        type: Boolean,
+        default: false,
+        index: true,
+      },
+      dnsPropagationStatus: {
+        type: String,
+        enum: ['pending', 'propagating', 'complete', 'failed'],
+        default: 'pending',
+      },
+      lastDnsSync: {
+        type: Date,
       },
     },
     suspensionReason: {

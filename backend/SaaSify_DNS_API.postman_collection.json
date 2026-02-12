@@ -1,0 +1,327 @@
+{
+  "info": {
+    "name": "SaaSify - DNS Management (Route53)",
+    "description": "API endpoints for AWS Route53 DNS management",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "domainId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "DNS Management",
+      "item": [
+        {
+          "name": "1. Create Hosted Zone",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"domainId\": \"{{domainId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/hosting/dns/zones",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "hosting", "dns", "zones"]
+            },
+            "description": "Create a Route53 hosted zone for a domain. Returns nameservers to configure at registrar."
+          },
+          "response": []
+        },
+        {
+          "name": "2. Get Hosted Zone Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/hosting/dns/zones/{{domainId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "hosting", "dns", "zones", "{{domainId}}"]
+            },
+            "description": "Get hosted zone details including nameservers and record count."
+          },
+          "response": []
+        },
+        {
+          "name": "3. List DNS Records",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/hosting/dns/records/{{domainId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "hosting", "dns", "records", "{{domainId}}"]
+            },
+            "description": "List all DNS records for a domain (A, CNAME, MX, TXT, etc.)"
+          },
+          "response": []
+        },
+        {
+          "name": "4. Create A Record (IP Address)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"example.com\",\n  \"type\": \"A\",\n  \"ttl\": 300,\n  \"values\": [\"54.210.23.45\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/hosting/dns/records/{{domainId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "hosting", "dns", "records", "{{domainId}}"]
+            },
+            "description": "Create or update an A record pointing domain to an IP address."
+          },
+          "response": []
+        },
+        {
+          "name": "5. Create CNAME Record (Alias)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"www.example.com\",\n  \"type\": \"CNAME\",\n  \"ttl\": 300,\n  \"values\": [\"example.com\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/hosting/dns/records/{{domainId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "hosting", "dns", "records", "{{domainId}}"]
+            },
+            "description": "Create CNAME record to alias www to root domain."
+          },
+          "response": []
+        },
+        {
+          "name": "6. Create MX Records (Email)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"example.com\",\n  \"type\": \"MX\",\n  \"ttl\": 3600,\n  \"values\": [\n    \"10 mail.example.com\",\n    \"20 mail2.example.com\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/hosting/dns/records/{{domainId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "hosting", "dns", "records", "{{domainId}}"]
+            },
+            "description": "Configure MX records for email routing."
+          },
+          "response": []
+        },
+        {
+          "name": "7. Create TXT Record (SPF, DKIM)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"example.com\",\n  \"type\": \"TXT\",\n  \"ttl\": 300,\n  \"values\": [\"v=spf1 include:_spf.google.com ~all\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/hosting/dns/records/{{domainId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "hosting", "dns", "records", "{{domainId}}"]
+            },
+            "description": "Create TXT record for SPF, DKIM, or domain verification."
+          },
+          "response": []
+        },
+        {
+          "name": "8. Create Default Records (Quick Setup)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"targetIp\": \"54.210.23.45\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/hosting/dns/default/{{domainId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "hosting", "dns", "default", "{{domainId}}"]
+            },
+            "description": "Quick setup: Creates A records for both root and www subdomain."
+          },
+          "response": []
+        },
+        {
+          "name": "9. Check DNS Propagation",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/hosting/dns/check/{{domainId}}?recordType=A",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "hosting", "dns", "check", "{{domainId}}"],
+              "query": [
+                {
+                  "key": "recordType",
+                  "value": "A",
+                  "description": "Record type to check (A, CNAME, MX, TXT)"
+                }
+              ]
+            },
+            "description": "Check if DNS changes have propagated across multiple DNS resolvers."
+          },
+          "response": []
+        },
+        {
+          "name": "10. Delete DNS Record",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"subdomain.example.com\",\n  \"type\": \"A\",\n  \"ttl\": 300,\n  \"values\": [\"54.210.23.45\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/hosting/dns/records/{{domainId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "hosting", "dns", "records", "{{domainId}}"]
+            },
+            "description": "Delete a specific DNS record. Must match exact values."
+          },
+          "response": []
+        },
+        {
+          "name": "11. Get Route53 Enabled Domains",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/hosting/dns/domains",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "hosting", "dns", "domains"]
+            },
+            "description": "List all domains that have Route53 enabled."
+          },
+          "response": []
+        },
+        {
+          "name": "12. Delete Hosted Zone",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/hosting/dns/zones/{{domainId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "hosting", "dns", "zones", "{{domainId}}"]
+            },
+            "description": "Delete hosted zone. Automatically removes all DNS records first."
+          },
+          "response": []
+        }
+      ],
+      "description": "AWS Route53 DNS management endpoints"
+    },
+    {
+      "name": "Auth (Get Token)",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('accessToken', response.data.accessToken);",
+                  "    console.log('✅ Token saved to collection variable');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@test.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Login to get access token. Token is automatically saved to collection variable."
+          },
+          "response": []
+        }
+      ],
+      "description": "Authentication endpoints"
+    }
+  ]
+}

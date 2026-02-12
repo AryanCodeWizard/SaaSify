@@ -1,12 +1,13 @@
 // Note: Environment variables are preloaded via -r dotenv/config flag in package.json
 // This ensures .env is loaded before any ES module imports execute
 
+import { initializeAwsClients, testAwsConnection } from './modules/aws/aws.config.js';
+
 import app from './app.js';
 import connectDB from './config/database.js';
 import { connectRedis } from './config/redis.js';
 import { initRateLimiters } from './middleware/rateLimit.middleware.js';
 import logger from './utils/logger.js';
-
 
 const PORT = process.env.PORT || 4000;
 
@@ -18,6 +19,19 @@ const startServer = async () => {
 
     await connectRedis();
     logger.info('✓ Redis connected');
+
+    // Initialize AWS clients (optional - will warn if credentials not configured)
+    const awsInitialized = initializeAwsClients();
+    if (awsInitialized) {
+      const awsConnected = await testAwsConnection();
+      if (awsConnected) {
+        logger.info('✓ AWS services connected');
+      } else {
+        logger.warn('⚠ AWS services not available (connection test failed)');
+      }
+    } else {
+      logger.warn('⚠ AWS services not configured (credentials missing)');
+    }
 
     // Initialize rate limiters AFTER Redis is connected
     // (because rate limiters use Redis as storage)

@@ -2,6 +2,7 @@ import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-d
 
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
+import CreateHosting from './pages/dashboard/CreateHosting';
 // Protected Pages - Client
 import Dashboard from './pages/dashboard/Dashboard';
 import DashboardLayout from './layouts/DashboardLayout';
@@ -9,9 +10,11 @@ import DomainDetails from './pages/dashboard/DomainDetails';
 // Domain Search
 import DomainSearch from './pages/DomainSearch';
 import Domains from './pages/dashboard/Domains';
+import DynamicHostingDetails from './pages/dashboard/DynamicHostingDetails';
 import ForgotPassword from './pages/auth/ForgotPassword';
 // Public Pages
 import Home from './pages/Home';
+import HostingServices from './pages/dashboard/HostingServices';
 import InvoiceDetails from './pages/dashboard/InvoiceDetails';
 import Invoices from './pages/dashboard/Invoices';
 import Login from './pages/auth/Login';
@@ -20,6 +23,7 @@ import MainLayout from './layouts/MainLayout';
 import Profile from './pages/dashboard/Profile';
 import Register from './pages/auth/Register';
 import ResetPassword from './pages/auth/ResetPassword';
+import StaticHostingDetails from './pages/dashboard/StaticHostingDetails';
 import { Toaster } from 'react-hot-toast';
 import Wallet from './pages/dashboard/Wallet';
 import useAuthStore from './store/authStore';
@@ -77,6 +81,10 @@ function App() {
           <Route path="checkout" element={<Checkout />} />
           <Route path="domains" element={<Domains />} />
           <Route path="domains/:id" element={<DomainDetails />} />
+          <Route path="hosting" element={<HostingServices />} />
+          <Route path="hosting/create" element={<CreateHosting />} />
+          <Route path="hosting/static/:id" element={<StaticHostingDetails />} />
+          <Route path="hosting/dynamic/:id" element={<DynamicHostingDetails />} />
           <Route path="invoices" element={<Invoices />} />
           <Route path="invoices/:id" element={<InvoiceDetails />} />
           <Route path="wallet" element={<Wallet />} />

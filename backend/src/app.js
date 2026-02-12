@@ -8,13 +8,16 @@ import cartRoutes from './modules/cart/cart.routes.js';
 import clientRoutes from './modules/clients/client.routes.js';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
+import dnsRoutes from './modules/hosting/dns.routes.js';
 import domainRoutes from './modules/domains/domain.routes.js';
+import dynamicHostingRoutes from './modules/hosting/dynamic-hosting.routes.js';
 import express from 'express';
 import helmet from 'helmet';
 import invoiceRoutes from './modules/invoices/invoice.routes.js';
 import logger from './utils/logger.js';
 import morgan from 'morgan';
 import paymentRoutes from './modules/payments/payment.routes.js';
+import staticHostingRoutes from './modules/hosting/static-hosting.routes.js';
 import walletRoutes from './modules/wallet/wallet.routes.js';
 
 const app = express();
@@ -95,6 +98,10 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/invoices', invoiceRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/wallet', walletRoutes);
+app.use('/api/hosting/dns', dnsRoutes);
+app.use('/api/hosting/static', staticHostingRoutes);
+app.use('/api/hosting/dynamic', dynamicHostingRoutes);
+app.use('/api/hosting/static', staticHostingRoutes);
 
 // API Documentation
 app.get('/api', (req, res) => {
@@ -111,6 +118,11 @@ app.get('/api', (req, res) => {
       invoices: '/api/invoices',
       payments: '/api/payments',
       wallet: '/api/wallet',
+      hosting: {
+        dns: '/api/hosting/dns',
+        static: '/api/hosting/static',
+        dynamic: '/api/hosting/dynamic',
+      },
     },
   });
 });

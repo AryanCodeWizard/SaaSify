@@ -3,6 +3,7 @@ import {
   Globe,
   LayoutDashboard,
   LogOut,
+  Server,
   User,
   Wallet,
 } from 'lucide-react';
@@ -31,6 +32,7 @@ export default function Sidebar() {
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
     { icon: Globe, label: 'Domains', path: '/dashboard/domains' },
+    { icon: Server, label: 'Hosting', path: '/dashboard/hosting' },
     { icon: FileText, label: 'Invoices', path: '/dashboard/invoices' },
     { icon: Wallet, label: 'Wallet', path: '/dashboard/wallet' },
     { icon: User, label: 'Profile', path: '/dashboard/profile' },
