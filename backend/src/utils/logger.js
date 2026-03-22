@@ -20,8 +20,8 @@ const consoleFormat = winston.format.combine(
 // Define transports
 const transports = [];
 
-// Console transport (always enabled in development)
-if (process.env.NODE_ENV !== 'production') {
+// Console transport (always enabled in development or when no files)
+if (process.env.NODE_ENV !== 'production' || process.env.RENDER || process.env.VERCEL) {
   transports.push(
     new winston.transports.Console({
       format: consoleFormat,
@@ -30,30 +30,33 @@ if (process.env.NODE_ENV !== 'production') {
   );
 }
 
-// File transport for errors
-transports.push(
-  new DailyRotateFile({
-    filename: 'logs/error-%DATE%.log',
-    datePattern: 'YYYY-MM-DD',
-    level: 'error',
-    format: logFormat,
-    maxSize: process.env.LOG_MAX_SIZE || '10m',
-    maxFiles: process.env.LOG_MAX_FILES || '7d',
-    zippedArchive: true,
-  })
-);
+// File transports (disabled on Render/Vercel)
+if (!process.env.RENDER && !process.env.VERCEL) {
+  // File transport for errors
+  transports.push(
+    new DailyRotateFile({
+      filename: 'logs/error-%DATE%.log',
+      datePattern: 'YYYY-MM-DD',
+      level: 'error',
+      format: logFormat,
+      maxSize: process.env.LOG_MAX_SIZE || '10m',
+      maxFiles: process.env.LOG_MAX_FILES || '7d',
+      zippedArchive: true,
+    })
+  );
 
-// File transport for all logs
-transports.push(
-  new DailyRotateFile({
-    filename: 'logs/combined-%DATE%.log',
-    datePattern: 'YYYY-MM-DD',
-    format: logFormat,
-    maxSize: process.env.LOG_MAX_SIZE || '10m',
-    maxFiles: process.env.LOG_MAX_FILES || '7d',
-    zippedArchive: true,
-  })
-);
+  // File transport for all logs
+  transports.push(
+    new DailyRotateFile({
+      filename: 'logs/combined-%DATE%.log',
+      datePattern: 'YYYY-MM-DD',
+      format: logFormat,
+      maxSize: process.env.LOG_MAX_SIZE || '10m',
+      maxFiles: process.env.LOG_MAX_FILES || '7d',
+      zippedArchive: true,
+    })
+  );
+}
 
 // Create logger
 const logger = winston.createLogger({
