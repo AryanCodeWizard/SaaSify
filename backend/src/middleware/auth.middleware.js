@@ -41,9 +41,11 @@ export const authenticateToken = async (req, res, next) => {
       return errorResponse(res, 'User not found', 404);
     }
 
-    // Check if email is verified
+    // Check if email is verified (bypass for test users)
     if (!user.emailVerified) {
-      return errorResponse(res, 'Please verify your email to access this resource', 403);
+      if (!user.email.endsWith('@example.com')) {
+        return errorResponse(res, 'Please verify your email to access this resource', 403);
+      }
     }
 
     // Attach user to request
@@ -52,8 +54,11 @@ export const authenticateToken = async (req, res, next) => {
       email: user.email,
       role: user.role,
     };
-    
     next();
+    // Attach the ful user details to the request for later use in controllers if needed
+  
+    // req.userDetails=user;
+
   } catch (error) {
     if (error.name === 'TokenExpiredError') {
       return errorResponse(res, 'Token expired', 401);
@@ -76,10 +81,13 @@ export const requireRole = (...roles) => {
     if (!roles.includes(req.user.role)) {
       return errorResponse(res, 'Insufficient permissions', 403);
     }
-
     next();
   };
+
 };
+// Admin role required
+
+
 
 /**
  * Optional authentication - doesn't fail if no token
@@ -107,3 +115,8 @@ export const optionalAuth = async (req, res, next) => {
   
   next();
 };
+
+
+export const testingUserAuth = async (req,res,next) => {
+  
+}

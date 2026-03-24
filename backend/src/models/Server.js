@@ -63,18 +63,14 @@ const serverSchema = new mongoose.Schema(
     // AWS specific
     aws: {
       region: String,
-      accessKeyId: {
-        type: String,
-        select: false,
-      },
-      secretAccessKey: {
-        type: String,
-        select: false,
-      },
       ec2InstanceType: String,
       ami: String,
       securityGroupId: String,
       keyPairName: String,
+        roleArn: {
+          type: String,
+          trim: true,
+        },
     },
     // DigitalOcean specific
     digitalocean: {

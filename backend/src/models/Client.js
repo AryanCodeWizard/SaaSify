@@ -52,10 +52,6 @@ const ClientSchema = new mongoose.Schema({
     type: String,
     default: 'en',
   },
-  walletBalance: {
-    type: Number,
-    default: 0,
-  },
   status: {
     type: String,
     enum: ['active', 'suspended'],

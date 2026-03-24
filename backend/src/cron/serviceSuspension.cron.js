@@ -1,6 +1,7 @@
 import Invoice from '../models/Invoice.js';
 import Service from '../models/Service.js';
 import cron from 'node-cron';
+import infraQueue from '../queues/infra.queue.js';
 import logger from '../utils/logger.js';
 
 /**
@@ -39,14 +40,10 @@ const startServiceSuspensionCron = () => {
           });
 
           for (const service of services) {
-            // Suspend the service
-            service.status = 'suspended';
-            service.suspendedAt = new Date();
-            service.suspensionReason = 'Payment overdue';
-            await service.save();
-
+            // Enqueue suspendInfra job instead of acting directly
+            await infraQueue.add('suspend-infra', { serviceId: service._id });
             suspendedCount++;
-            logger.info(`Service ${service._id} suspended due to overdue invoice ${invoice._id}`);
+            logger.info(`Enqueued suspendInfra for Service ${service._id} due to overdue invoice ${invoice._id}`);
           }
         } catch (error) {
           logger.error(`Failed to suspend services for invoice ${invoice._id}:`, error);

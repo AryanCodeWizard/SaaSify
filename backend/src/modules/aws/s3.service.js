@@ -195,10 +195,15 @@ const configureCors = async (bucketName) => {
 const getBucketRegion = async (bucketName) => {
   try {
     const client = getS3Client();
+    // const command = new GetBucketLocationCommand({Bucket:bucketName})
+
 
     const command = new GetBucketLocationCommand({
       Bucket: bucketName,
     });
+    // if(command){
+    //   logger.info('Successfully got bucket location for bucket: ',bucketExists)
+    // }
 
     const response = await client.send(command);
     // LocationConstraint is null for us-east-1
@@ -391,6 +396,7 @@ const deleteBucket = async (bucketName) => {
     throw new Error(`Failed to delete S3 bucket: ${error.message}`);
   }
 };
+
 
 /**
  * Check if bucket exists

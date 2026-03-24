@@ -1,4 +1,7 @@
+
+import express from 'express';
 import { authenticateToken, optionalAuth } from '../../middleware/auth.middleware.js';
+import { validate } from '../../middleware/validation.middleware.js';
 import {
   checkAvailability,
   getDomainById,
@@ -14,18 +17,33 @@ import {
   domainLockSchema,
   domainTransferSchema,
   forwardingSchema,
-} from './domain.validation.js';
-import {
   domainAvailabilitySchema,
   domainPricingSchema,
   domainSearchSchema,
   domainSuggestionsSchema,
+  domainRegistrationSchema,
 } from './domain.validation.js';
 
-import express from 'express';
-import { validate } from '../../middleware/validation.middleware.js';
-
 const router = express.Router();
+
+/**
+ * @route   POST /api/domains/register
+ * @desc    Register a new domain
+ * @access  Private
+ */
+router.post(
+  '/register',
+  authenticateToken,
+  validate(domainRegistrationSchema, 'body'),
+  async (req, res, next) => {
+    try {
+      const mod = await import('./domain.controller.js');
+      return mod.registerDomain(req, res);
+    } catch (err) {
+      next(err);
+    }
+  }
+);
 
 /**
  * @route   GET /api/domains/search

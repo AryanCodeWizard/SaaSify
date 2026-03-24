@@ -1,6 +1,8 @@
 import Domain from '../models/Domain.js';
 import cron from 'node-cron';
+import domainExpiryCascadeWorker from '../workers/domainExpiryCascade.worker.js';
 import { emailQueue } from '../queues/domain.queue.js';
+import infraQueue from '../queues/infra.queue.js';
 import logger from '../utils/logger.js';
 
 /**
@@ -58,7 +60,7 @@ const domainExpiryCron = cron.schedule(
               }
             );
 
-            // Update last reminder sent time
+            //Update last reminder sent time
             await Domain.findByIdAndUpdate(domain._id, {
               lastExpiryReminderAt: now,
             });
@@ -82,12 +84,8 @@ const domainExpiryCron = cron.schedule(
 
       for (const domain of expiredDomains) {
         try {
-          // Update domain status
-          await Domain.findByIdAndUpdate(domain._id, {
-            status: 'expired',
-            expiredAt: domain.expiryDate,
-          });
-
+          // Enqueue domainExpiryCascade job for this domain
+          await domainExpiryCascadeWorker({ data: { domainId: domain._id } });
           // Send expiry notification
           await emailQueue.add(
             'domain-expired',
@@ -98,7 +96,6 @@ const domainExpiryCron = cron.schedule(
             },
             { priority: 1 }
           );
-
           totalNotifications++;
         } catch (error) {
           logger.error(`Failed to process expired domain ${domain.domainName}:`, error);

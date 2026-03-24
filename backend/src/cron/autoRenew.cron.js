@@ -42,110 +42,18 @@ const autoRenewCron = cron.schedule(
       let failCount = 0;
 
       for (const domain of domainsToRenew) {
-        const session = await mongoose.startSession();
-        session.startTransaction();
-
         try {
-          // Get client wallet balance
-          const client = await Client.findOne({ userId: domain.userId._id })
-            .session(session);
-
-          if (!client) {
-            throw new Error('Client not found');
+          // Find all services for this domain
+          const services = await Service.find({ domainId: domain._id });
+          for (const service of services) {
+            // Enqueue renewService job for each service
+            await infraQueue.add('renew-service', { serviceId: service._id });
+            logger.info(`Enqueued renewService for Service ${service._id} (domain ${domain.domainName})`);
           }
-
-          // Get domain pricing
-          const tld = domain.domainName.split('.').pop();
-          const pricing = await godaddyService.getDomainPricing(tld);
-          const renewalPrice = pricing.prices.renewal[1];
-
-          // Check if client has sufficient balance
-          if (client.walletBalance < renewalPrice) {
-            throw new Error(
-              `Insufficient wallet balance. Required: $${renewalPrice}, Available: $${client.walletBalance}`
-            );
-          }
-
-          // Deduct from wallet
-          client.walletBalance -= renewalPrice;
-          await client.save({ session });
-
-          // Create invoice for the renewal
-          const invoice = await Invoice.create(
-            [
-              {
-                userId: domain.userId._id,
-                clientId: client._id,
-                invoiceNumber: `INV-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                items: [
-                  {
-                    description: `Domain Renewal - ${domain.domainName}`,
-                    quantity: 1,
-                    unitPrice: renewalPrice,
-                    total: renewalPrice,
-                  },
-                ],
-                subtotal: renewalPrice,
-                tax: 0,
-                total: renewalPrice,
-                status: 'paid',
-                paidAt: now,
-                dueDate: now,
-                paymentMethod: 'wallet',
-              },
-            ],
-            { session }
-          );
-
-          await session.commitTransaction();
-
-          // Queue renewal job
-          await domainRenewalQueue.add(
-            'auto-renew',
-            {
-              domainId: domain._id,
-              userId: domain.userId._id,
-              period: 1,
-              invoiceId: invoice[0]._id,
-            },
-            {
-              priority: 2, // Higher priority for auto-renewals
-              attempts: 3,
-            }
-          );
-
           successCount++;
-          logger.info(`✅ Queued auto-renewal for ${domain.domainName}`);
         } catch (error) {
-          await session.abortTransaction();
-
+          logger.error(`Failed to enqueue renewService for domain ${domain.domainName}:`, error);
           failCount++;
-          logger.error(`Failed to auto-renew ${domain.domainName}:`, error.message);
-
-          // Increment attempt counter
-          await Domain.findByIdAndUpdate(domain._id, {
-            $inc: { autoRenewAttempts: 1 },
-          });
-
-          // Send notification about failed auto-renewal
-          await emailQueue.add('auto-renew-failed', {
-            userId: domain.userId._id,
-            domain: domain.domainName,
-            reason: error.message,
-            expiryDate: domain.expiryDate,
-          });
-
-          // If max attempts reached, disable auto-renewal
-          const updatedDomain = await Domain.findById(domain._id);
-          if (updatedDomain.autoRenewAttempts >= 3) {
-            updatedDomain.autoRenew = false;
-            await updatedDomain.save();
-            logger.warn(
-              `Auto-renewal disabled for ${domain.domainName} after 3 failed attempts`
-            );
-          }
-        } finally {
-          session.endSession();
         }
       }
 

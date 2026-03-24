@@ -55,15 +55,18 @@ export const createDatabase = async (options) => {
       PreferredBackupWindow: '03:00-04:00', // 3-4 AM UTC
       PreferredMaintenanceWindow: 'sun:04:00-sun:05:00', // Sunday 4-5 AM UTC
       EnableCloudwatchLogsExports: ['error', 'general', 'slowquery'],
+      //For tagaging and better managment of the RDS instances, we are adding tags to identify the instance with domain name and also to identify that it is mamanged by sasify 
       Tags: [
         { Key: 'Name', Value: `${domainName}-database` },
         { Key: 'Domain', Value: domainName },
         { Key: 'ManagedBy', Value: 'SaaSify' },
       ],
     });
+    //Tag for identifysing the database on the basis of domain 
 
     const response = await rdsClient.send(command);
     const dbInstance = response.DBInstance;
+    // const finalInformation= response.DBInstance.DBInstanceIdentifier;
 
     logger.info(`✅ RDS instance created: ${dbInstanceIdentifier}`);
 

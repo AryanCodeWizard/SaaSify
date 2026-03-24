@@ -107,6 +107,19 @@ const getS3Client = () => {
   return s3Client;
 };
 
+//For Testing purpose only, to avoid circular dependency issue with route53 client
+
+const getRRoute53ClientForTesting = () => {
+  if(route53Client){
+    return route53Client;
+  }
+  throw new Error('Route53 client not initialized for testing. Check AWS credentials and Initialization.');
+}
+
+
+
+//All the Above function are for testing purpose only to avoid circular dependency issue with route53 client, as it is used in route53 service and also in aws config for testing connection.
+
 const getEC2Client = () => {
   if (!ec2Client) {
     throw new Error('EC2 client not initialized. Check AWS credentials.');

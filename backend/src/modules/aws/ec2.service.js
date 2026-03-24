@@ -68,6 +68,7 @@ export const createSecurityGroup = async (domainName, vpcId = null) => {
     const ec2Client = getEC2Client();
     const groupName = `${domainName.replace(/\./g, '-')}-sg`;
     const description = `Security group for ${domainName} hosting`;
+    const logger =  getLogger()
 
     // Check if security group already exists
     try {

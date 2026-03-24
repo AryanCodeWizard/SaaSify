@@ -1,6 +1,7 @@
 import Invoice from '../models/Invoice.js';
 import Service from '../models/Service.js';
 import cron from 'node-cron';
+import infraQueue from '../queues/infra.queue.js';
 import logger from '../utils/logger.js';
 
 /**
@@ -39,14 +40,10 @@ const startServiceTerminationCron = () => {
           });
 
           for (const service of services) {
-            // Terminate the service
-            service.status = 'terminated';
-            service.terminatedAt = new Date();
-            service.terminationReason = 'Payment overdue for 30+ days';
-            await service.save();
-
+            // Enqueue destroyInfra job instead of acting directly
+            await infraQueue.add('destroy-infra', { serviceId: service._id });
             terminatedCount++;
-            logger.info(`Service ${service._id} terminated due to long overdue invoice ${invoice._id}`);
+            logger.info(`Enqueued destroyInfra for Service ${service._id} due to long overdue invoice ${invoice._id}`);
           }
 
           // Mark invoice as cancelled

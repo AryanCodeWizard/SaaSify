@@ -1,3 +1,64 @@
+/**
+ * Register a new domain
+ * POST /api/domains/register
+ */
+export const registerDomain = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { domain, period = 1, autoRenew = true, privacy = true, nameServers = [] } = req.body;
+
+    // Get client
+    const client = await Client.findOne({ userId });
+    if (!client) {
+      return errorResponse(res, 'Client not found', 404);
+    }
+
+    // Check if domain already exists in DB
+    const existing = await Domain.findOne({ domainName: domain.toLowerCase() });
+    if (existing) {
+      return errorResponse(res, 'Domain already exists in your account', 409);
+    }
+
+    // Register domain via GoDaddy
+    const registration = await godaddyService.registerDomain({
+      domain,
+      period,
+      renewAuto: autoRenew,
+      privacy,
+      nameServers,
+      // You may want to add contact info, consent, etc. here
+    });
+
+    // Create domain record in DB
+    const tld = domain.split('.').pop();
+    const newDomain = await Domain.create({
+      clientId: client._id,
+      domainName: domain.toLowerCase(),
+      tld,
+      registrar: 'godaddy',
+      registrarDomainId: registration.domain,
+      status: 'active',
+    });
+
+    // Optionally, create an order record, send email, etc.
+
+    await ActivityLog.create({
+      userId,
+      action: 'domain_register',
+      category: 'domain',
+      description: `Registered domain: ${domain}`,
+      metadata: { domain, registration },
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+      status: 'success',
+    });
+
+    return successResponse(res, { domain: newDomain, registration }, 'Domain registered successfully');
+  } catch (error) {
+    logger.error('Domain registration error:', error);
+    return errorResponse(res, error.message || 'Failed to register domain', 500);
+  }
+};
 import { errorResponse, successResponse } from '../../utils/response.js';
 
 import ActivityLog from '../../models/ActivityLog.js';
