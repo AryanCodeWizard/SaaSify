@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
-// Load environment variables first
+// Load environment variables first 
+// will work on next phase 
 import dotenv from 'dotenv';
 const envFile = process.env.NODE_ENV === 'production' 
   ? '.env.production' 
