@@ -2,8 +2,11 @@ import { errorResponse, successResponse } from '../../utils/response.js';
 
 import ActivityLog from '../../models/ActivityLog.js';
 import Client from '../../models/Client.js';
+import Domain from '../../models/Domain.js';
+import Invoice from '../../models/Invoice.js';
 import Transaction from '../../models/Transaction.js';
 import User from '../../models/User.js';
+import { redis } from '../../config/redis.js';
 import logger from '../../utils/logger.js';
 
 /**
@@ -270,5 +273,112 @@ export const getActivityLogs = async (req, res) => {
   } catch (error) {
     logger.error('Get activity logs error:', error);
     return errorResponse(res, 'Failed to retrieve activity logs', 500);
+  }
+};
+
+/**
+ * Get dashboard analytics for authenticated client
+ * GET /api/clients/me/dashboard
+ */
+export const getDashboardAnalytics = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const cacheKey = `dashboard:client:${userId}`;
+
+    try {
+      const cached = await redis.get(cacheKey);
+      if (cached) {
+        return successResponse(res, JSON.parse(cached), 'Dashboard analytics retrieved (cached)');
+      }
+    } catch (cacheError) {
+      logger.warn('Dashboard cache read failed:', cacheError.message);
+    }
+
+    const client = await Client.findOne({ userId }).select('_id walletBalance currency').lean();
+
+    if (!client) {
+      return errorResponse(res, 'Client not found', 404);
+    }
+
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+
+    const [
+      domainCount,
+      unpaidInvoiceCount,
+      monthlySpendResult,
+      recentDomains,
+      recentInvoices,
+    ] = await Promise.all([
+      Domain.countDocuments({ clientId: client._id }),
+      Invoice.countDocuments({ clientId: client._id, status: { $in: ['unpaid', 'overdue'] } }),
+      Transaction.aggregate([
+        {
+          $match: {
+            clientId: client._id,
+            type: 'payment',
+            status: { $in: ['success', 'completed'] },
+            createdAt: { $gte: monthStart },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: '$amount' },
+          },
+        },
+      ]),
+      Domain.find({ clientId: client._id })
+        .sort({ createdAt: -1 })
+        .limit(3)
+        .select('domainName status registrationDate createdAt')
+        .lean(),
+      Invoice.find({ clientId: client._id })
+        .sort({ createdAt: -1 })
+        .limit(3)
+        .select('invoiceNumber invoiceDate createdAt status total')
+        .lean(),
+    ]);
+
+    const recentActivity = [
+      ...recentDomains.map((domain) => ({
+        type: 'domain',
+        title: `Domain Registered: ${domain.domainName}`,
+        date: domain.registrationDate || domain.createdAt,
+        status: domain.status,
+      })),
+      ...recentInvoices.map((invoice) => ({
+        type: 'invoice',
+        title: `Invoice ${invoice.invoiceNumber}`,
+        date: invoice.invoiceDate || invoice.createdAt,
+        status: invoice.status,
+        amount: invoice.total,
+      })),
+    ]
+      .sort((a, b) => new Date(b.date) - new Date(a.date))
+      .slice(0, 5);
+
+    const data = {
+      stats: {
+        domains: domainCount,
+        invoices: unpaidInvoiceCount,
+        walletBalance: client.walletBalance || 0,
+        monthlySpend: monthlySpendResult[0]?.total || 0,
+        currency: client.currency || 'INR',
+      },
+      recentActivity,
+    };
+
+    try {
+      await redis.setEx(cacheKey, 60, JSON.stringify(data));
+    } catch (cacheError) {
+      logger.warn('Dashboard cache write failed:', cacheError.message);
+    }
+
+    return successResponse(res, data, 'Dashboard analytics retrieved');
+  } catch (error) {
+    logger.error('Get dashboard analytics error:', error);
+    return errorResponse(res, 'Failed to retrieve dashboard analytics', 500);
   }
 };

@@ -5,6 +5,7 @@ import {
 } from './client.validation.js';
 import {
   addWalletCredit,
+  getDashboardAnalytics,
   getActivityLogs,
   getProfile,
   getWallet,
@@ -42,6 +43,13 @@ router.patch('/me', validate(updateProfileSchema), updateProfile);
  * @access  Private (Client)
  */
 router.get('/me/wallet', getWallet);
+
+/**
+ * @route   GET /api/clients/me/dashboard
+ * @desc    Get client dashboard analytics
+ * @access  Private (Client)
+ */
+router.get('/me/dashboard', getDashboardAnalytics);
 
 /**
  * @route   POST /api/clients/me/wallet/add

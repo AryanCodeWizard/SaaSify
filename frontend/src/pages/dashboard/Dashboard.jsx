@@ -2,10 +2,8 @@ import { AlertCircle, ArrowRight, FileText, Globe, Loader2, TrendingUp, Wallet a
 import { useEffect, useState } from 'react';
 
 import { Link } from 'react-router-dom';
-import { domainService } from '../../services/domainService';
-import { invoiceService } from '../../services/invoiceService';
+import { dashboardService } from '../../services/dashboardService';
 import toast from 'react-hot-toast';
-import { walletService } from '../../services/walletService';
 
 export default function Dashboard() {
   const [loading, setLoading] = useState(true);
@@ -23,74 +21,17 @@ export default function Dashboard() {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        
-        // Fetch all data in parallel
-        const [domainsRes, invoicesRes, walletRes] = await Promise.allSettled([
-          domainService.getMyDomains({ page: 1, limit: 1 }),
-          invoiceService.getMyInvoices({ page: 1, limit: 1, status: 'unpaid' }),
-          walletService.getWalletBalance(),
-        ]);
+        const response = await dashboardService.getDashboardAnalytics();
 
         if (!isMounted) return;
 
-        const newStats = {
+        setStats(response.data?.stats || {
           domains: 0,
           invoices: 0,
           walletBalance: 0,
           monthlySpend: 0,
-        };
-
-      // Process domains
-      if (domainsRes.status === 'fulfilled') {
-        newStats.domains = domainsRes.value.data.pagination?.totalDomains || domainsRes.value.data.domains?.length || 0;
-      }
-
-      // Process invoices
-      if (invoicesRes.status === 'fulfilled') {
-        newStats.invoices = invoicesRes.value.data.pagination?.totalInvoices || invoicesRes.value.data.invoices?.length || 0;
-      }
-
-      // Process wallet
-      if (walletRes.status === 'fulfilled') {
-        newStats.walletBalance = walletRes.value.data.balance || 0;
-      }
-
-      // Calculate monthly spend (mock for now - can be updated with real API)
-      newStats.monthlySpend = 0;
-
-      setStats(newStats);
-
-      // Get recent activity (combining domains and invoices)
-      const activity = [];
-      
-      if (domainsRes.status === 'fulfilled' && domainsRes.value.data.domains?.length > 0) {
-        const recentDomains = domainsRes.value.data.domains.slice(0, 3);
-        recentDomains.forEach(domain => {
-          activity.push({
-            type: 'domain',
-            title: `Domain Registered: ${domain.domainName}`,
-            date: domain.registrationDate,
-            status: domain.status,
-          });
         });
-      }
-
-      if (invoicesRes.status === 'fulfilled' && invoicesRes.value.data.invoices?.length > 0) {
-        const recentInvoices = invoicesRes.value.data.invoices.slice(0, 3);
-        recentInvoices.forEach(invoice => {
-          activity.push({
-            type: 'invoice',
-            title: `Invoice ${invoice.invoiceNumber}`,
-            date: invoice.invoiceDate,
-            status: invoice.status,
-            amount: invoice.totalAmount,
-          });
-        });
-      }
-
-      // Sort by date
-      activity.sort((a, b) => new Date(b.date) - new Date(a.date));
-      setRecentActivity(activity.slice(0, 5));
+        setRecentActivity(response.data?.recentActivity || []);
 
       } catch (error) {
         if (!isMounted) return;

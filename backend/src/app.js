@@ -101,7 +101,6 @@ app.use('/api/wallet', walletRoutes);
 app.use('/api/hosting/dns', dnsRoutes);
 app.use('/api/hosting/static', staticHostingRoutes);
 app.use('/api/hosting/dynamic', dynamicHostingRoutes);
-app.use('/api/hosting/static', staticHostingRoutes);
 
 // API Documentation
 app.get('/api', (req, res) => {
