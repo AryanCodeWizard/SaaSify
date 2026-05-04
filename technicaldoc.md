@@ -4,7 +4,7 @@
 
 ## 1. PROJECT OVERVIEW
 
-**Project Name:** SaaSify – Hosting & Domain Automation Platform
+**Project Name:** SaaSify – Hosting & Domain Automation Platform like whmcs
 
 **Description:**
 A production-grade, full-stack MERN (MongoDB, Express, React, Node.js) SaaS platform for web hosting, domain management, and billing automation. Inspired by WHMCS, it supports multi-tenant hosting, domain registration, automated billing, and AWS-based provisioning.
